@@ -98,8 +98,8 @@ for i in $(seq 1 $STALE_COUNT); do
     # Commit a unique file on this branch
     make_dummy_commit "$BRANCH_NAME" "$i"
 
-    # Push to remote to establish tracking reference
-    git push origin "$BRANCH_NAME" --quiet
+    # Push to remote and set upstream tracking
+    git push -u origin "$BRANCH_NAME" --quiet
 
     # Safely return to base branch for the next loop
     safe_checkout_base
@@ -152,8 +152,8 @@ for i in $(seq 1 $ACTIVE_COUNT); do
     # Commit a unique file on this branch
     make_dummy_commit "$BRANCH_NAME" "$i"
 
-    # Push and KEEP on remote
-    git push origin "$BRANCH_NAME" --quiet
+    # Push and KEEP on remote with upstream tracking
+    git push -u origin "$BRANCH_NAME" --quiet
 
     # Update local remote-tracking refs for this branch
     git fetch origin --quiet
