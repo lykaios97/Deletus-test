@@ -86,17 +86,13 @@ echo "📤 Creating $STALE_COUNT stale branches..."
 for i in $(seq 1 $STALE_COUNT); do
     BRANCH_NAME="stale/test-branch-$i"
 
-    # Skip if branch already exists locally
     if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
-        echo "   ⏭️  Already exists, skipping: $BRANCH_NAME"
-        continue
+        echo "   ⚠️  Local branch exists, reusing: $BRANCH_NAME"
+        git checkout "$BRANCH_NAME" --quiet
+    else
+        git checkout -b "$BRANCH_NAME" --quiet
+        make_dummy_commit "$BRANCH_NAME" "$i"
     fi
-
-    # Create new branch from base
-    git checkout -b "$BRANCH_NAME" --quiet
-
-    # Commit a unique file on this branch
-    make_dummy_commit "$BRANCH_NAME" "$i"
 
     # Push to remote and set upstream tracking
     git push -u origin "$BRANCH_NAME" --quiet
@@ -104,7 +100,7 @@ for i in $(seq 1 $STALE_COUNT); do
     # Safely return to base branch for the next loop
     safe_checkout_base
 
-    echo "   ✅ Created remote branch: $BRANCH_NAME"
+    echo "   ✅ Created or updated remote branch: $BRANCH_NAME"
 done
 
 echo ""
@@ -140,17 +136,13 @@ echo "📌 Creating $ACTIVE_COUNT active branches..."
 for i in $(seq 1 $ACTIVE_COUNT); do
     BRANCH_NAME="active/test-branch-$i"
 
-    # Skip if branch already exists locally
     if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
-        echo "   ⏭️  Already exists, skipping: $BRANCH_NAME"
-        continue
+        echo "   ⚠️  Local branch exists, reusing: $BRANCH_NAME"
+        git checkout "$BRANCH_NAME" --quiet
+    else
+        git checkout -b "$BRANCH_NAME" --quiet
+        make_dummy_commit "$BRANCH_NAME" "$i"
     fi
-
-    # Create new branch from base
-    git checkout -b "$BRANCH_NAME" --quiet
-
-    # Commit a unique file on this branch
-    make_dummy_commit "$BRANCH_NAME" "$i"
 
     # Push and KEEP on remote with upstream tracking
     git push -u origin "$BRANCH_NAME" --quiet
