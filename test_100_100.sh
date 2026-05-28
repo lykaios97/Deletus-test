@@ -78,7 +78,8 @@ make_dummy_commit() {
 
 # ============================================================
 # PART A — Create STALE branches
-# Push to remote → delete remote copy → local shows ": gone]"
+# Push to remote, then delete the remote copy after verification.
+# This makes local branches stale while allowing you to inspect them on GitHub first.
 # ============================================================
 echo "📤 Creating $STALE_COUNT stale branches..."
 
@@ -100,16 +101,32 @@ for i in $(seq 1 $STALE_COUNT); do
     # Push to remote to establish tracking reference
     git push origin "$BRANCH_NAME" --quiet
 
-    # Delete from remote — local now shows ": gone]"
-    git push origin --delete "$BRANCH_NAME" --quiet
-
-    # Update local remote-tracking refs so the branch becomes stale locally
-    git fetch origin --prune --quiet
-
-    # Safely return to base branch
+    # Safely return to base branch for the next loop
     safe_checkout_base
 
-    echo "   ✅ Stale: $BRANCH_NAME"
+    echo "   ✅ Created remote branch: $BRANCH_NAME"
+done
+
+echo ""
+echo "✅ Created all stale candidate branches on remote."
+echo "   You can verify them in GitHub now before they are deleted."
+echo "   Remote branch list will refresh after the next step."
+read -p "Press ENTER to delete the remote copies and make these branches stale locally... " _
+
+echo ""
+echo "🗑️ Deleting the remote copies for stale branches..."
+
+for i in $(seq 1 $STALE_COUNT); do
+    BRANCH_NAME="stale/test-branch-$i"
+
+    if ! git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+        echo "   ⚠️  Local branch missing, skipping: $BRANCH_NAME"
+        continue
+    fi
+
+    git push origin --delete "$BRANCH_NAME" --quiet || true
+    git fetch origin --prune --quiet
+    echo "   ✅ Remote deleted: $BRANCH_NAME"
 done
 
 echo ""
